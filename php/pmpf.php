@@ -63,7 +63,22 @@ class pmpf extends pgdb{
                 return ($result?$result:0);
 	}
 
-        function get_blocks_version($version,$record){
+        function string_to_array($string,$array_name='block_options'){
+	// converts coded array (specifically for versioning) in a column into php accessible associtative array
+	// step 1 get rid of the string that defines itself ..
+		$string = explode('{'.$array_name.',"{{',$string);
+		$string = $string[1];
+		$string = explode('},{',$string);
+
+		foreach($string as $loc=>$value){
+			$the_v = explode(',',$value);
+			$result [$the_v[0]] = str_replace(array('}}"=','}','"'),'',$the_v[1]);
+		}
+		return $result;
+
+	}
+// this needs to be rewritten to support the new function above
+	function get_blocks_version($version,$record){
                 $result = self::get_assoc("select get_blocks_version($version,$record);");
                 foreach(explode('}","',$result[0]['get_blocks_version']) as $key=>$value){
                         if($key != 0 ){
@@ -90,8 +105,4 @@ class pmpf extends pgdb{
                 return $result;
         }
 }
-
-// Enter your postgres data here
-//$pmpf = new pmpf('postgres','pass','dbname');
-
 

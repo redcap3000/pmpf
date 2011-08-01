@@ -84,8 +84,8 @@ CREATE FUNCTION  get_url(varchar(255),varchar(255)) returns  TABLE(b_content tex
     		string_to_array(v_dat[$1][5],'=>'),
     		string_to_array(v_dat[$1][6],'=>'),
     		string_to_array(v_dat[$1][7],'=>'),
-    		string_to_array(v_dat[$1][8],'=>'),
-    		string_to_array(v_dat[$1][9],'=>'),    
+    		string_to_array(v_dat[$1][8],'=>'),    
+   		string_to_array(v_dat[$1][9],'=>'),		
     		string_to_array(v_dat[$1][10],'=>'),
     		array_dims(v_dat[$1][1:1]) || array_upper(v_dat,1) as dimensions
     	FROM mp_versions

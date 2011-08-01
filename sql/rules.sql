@@ -15,7 +15,7 @@
      	'block_order=>'			||cast(NEW.block_order as text),
      	'block_content=>'			||cast(NEW.b_content as text),
      	'master_select=>'			||cast(NEW.master_select as text),
-     	'block_options=>'			||cast(NEW.b_options as text),
+	'b_options=>'||cast(NEW.b_options as text),
      	'status=>'				||cast(NEW.status as text)]
      	]
      );
@@ -25,7 +25,7 @@
     FOR EACH ROW EXECUTE PROCEDURE suppress_redundant_updates_trigger();
 
 
- DROP RULE IF EXISTS log_1_block ON mp_blocks;
+ DROP RULE IF EXISTS update_block ON mp_blocks;
 -- now if we are rolling back and update, do we add it to the list ? 
 -- this would create a history of sorts, if we have this we should be able to remove values lest 
 CREATE RULE update_block AS ON UPDATE TO mp_blocks
