@@ -73,6 +73,87 @@ CREATE FUNCTION  get_url(varchar(255),varchar(255)) returns  TABLE(b_content tex
     LANGUAGE SQL;  
     -- fix the way arrays get interpreted ... hmmm either here or the php, probably better here than in a language
   --make json/xml/atom output functions ! wouldn't that be rad!     
+
+
+
+DROP FUNCTION IF EXISTS compare(text,text);
+ CREATE FUNCTION compare(text,text) returns bool
+	AS $$
+	SELECT $1 IS DISTINCT FROM $2
+	$$
+	LANGUAGE SQL;          
+
+
+DROP FUNCTION IF EXISTS compare(int,int);
+ CREATE FUNCTION compare(int,int) returns bool       
+        AS $$
+        SELECT $1 IS DISTINCT FROM $2                      
+        $$
+        LANGUAGE SQL;
+
+DROP FUNCTION IF EXISTS compare(timestamp,timestamp);
+ CREATE FUNCTION compare(timestamp,timestamp) returns bool
+        AS $$
+        SELECT $1 IS DISTINCT FROM $2
+        $$
+        LANGUAGE SQL;
+
+DROP FUNCTION IF EXISTS compare(text[],text[]);
+ CREATE FUNCTION compare(text[],text[]) returns bool
+        AS $$
+        SELECT $1 IS DISTINCT FROM $2
+        $$
+        LANGUAGE SQL;
+
+DROP FUNCTION IF EXISTS compare(int[],int[]);
+ CREATE FUNCTION compare(int[],int[]) returns bool
+        AS $$
+        SELECT $1 IS DISTINCT FROM $2
+        $$
+        LANGUAGE SQL;
+
+
+
+    
+
+-- these overloaded functions will show the third passed value if the values are identical, otherwise it returns the first value passed
+-- tossing in a few type defs .. but if any are missing toss them in, or typecast to conform to below ( cast(column name as text) )
+ DPOP FUNCTION IF EXISTS compare(text,text,varchar(512));
+ CREATE FUNCTION compare(text,text,varchar(512)) returns text
+	as $$
+	SELECT CASE
+		WHEN (SELECT $1 IS DISTINCT FROM $2) = 't' THEN $1 ELSE $3
+		END
+	$$
+	LANGUAGE SQL;
+DROP FUNCTION IF EXISTS compare(text,text,text);
+ CREATE FUNCTION compare(text,text,text) returns text 
+        as $$
+        SELECT CASE
+                WHEN (SELECT $1 IS DISTINCT FROM $2) = 't' THEN $1 ELSE $3
+                END
+        $$
+        LANGUAGE SQL;
+ DROP FUNCTION IF EXISTS compare(varchar(512),varchar(512),varchar(512));
+ CREATE FUNCTION compare(varchar(512),varchar(512),varchar(512)) RETURNS varchar(512) 
+        AS $$
+        SELECT CASE
+                WHEN (SELECT $1 IS DISTINCT FROM $2) = 't' THEN $1 ELSE $3
+                END
+        $$
+        LANGUAGE SQL;
+-- compare two arrays and return an array
+-- can't just return a varchar because types varchar and text[], nor text and text[] can be matched in the case statement
+
+ DROP FUNCTION IF EXISTS compare(text[],text[],text[]);
+ CREATE FUNCTION compare(text[],text[],text[]) RETURNS text[]
+        AS $$
+        SELECT CASE
+                WHEN (SELECT $1 IS DISTINCT FROM $2) = 't' THEN $1 ELSE $3
+                END
+        $$
+        LANGUAGE SQL;
+
   DROP FUNCTION IF EXISTS get_blocks_version(int,int); 
  CREATE FUNCTION get_blocks_version(int,int) RETURNS TABLE(v_id int,r_id int,time_updated text[],usergroup text[],block_name text[],urls text[],block_type text[],block_order text[], block_content text[], master_select text[], block_options text[], status text[],dimensions text)
     	AS $$ 
