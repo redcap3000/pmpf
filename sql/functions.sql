@@ -142,6 +142,17 @@ DROP FUNCTION IF EXISTS compare(text,text,text);
                 END
         $$
         LANGUAGE SQL;
+
+	DROP FUNCTIONS IF EXISTS compare(int,int,varchar(512));
+
+ CREATE FUNCTION compare(int,int,varchar(512)) RETURNS varchar(512)
+        AS $$
+        SELECT CASE
+                WHEN (SELECT $1 IS DISTINCT FROM $2) = 't' THEN cast($1 as varchar(512)) ELSE $3
+                END
+        $$
+        LANGUAGE SQL;
+
 -- compare two arrays and return an array
 -- can't just return a varchar because types varchar and text[], nor text and text[] can be matched in the case statement
 
