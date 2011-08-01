@@ -5,19 +5,19 @@ http://myparse.org
 July, 2011
 AGPL
 
-*Postgres powered CMS based on myparse.
+*Postgres powered CMS based on myparse.*
 
-**Object oriented (inherited) template design.
+**Object oriented (inherited) template design.**
 
-**Automatic template/view versioning
+**Automatic template/view versioning**
 
-**Multidimensional array fields
+**Multidimensional array fields**
 
-**Corelated group management.
+**Corelated group management.**
 
-**Flexible and extensible permissions systems
+**Flexible and extensible permissions systems**
 
-**Simple database access via custom SQL functions.
+**Simple database access via custom SQL functions.**
 
 Goals:
 ======
