@@ -20,6 +20,8 @@
      	]
      );
                                 
+
+DROP TRIGGER IF EXISTS record_update_check on mp_blocks;
  CREATE TRIGGER record_update_check
     BEFORE UPDATE ON mp_blocks
     FOR EACH ROW EXECUTE PROCEDURE suppress_redundant_updates_trigger();
@@ -33,14 +35,14 @@ CREATE RULE update_block AS ON UPDATE TO mp_blocks
     SET   	
     v_dat =    array_cat((select v_dat from mp_versions where r_id = OLD.id),              
 				     	array['time_updated=>'||cast(localtimestamp as text),
-				     	'usergroup=>'			||cast(NULLIF(NEW.usergroup,OLD.usergroup) as text),
-				     	'block_name=>'			||cast(NULLIF(NEW.block_name,OLD.block_name) as text),
-				     	'urls=>'				||cast(NULLIF(NEW.urls,OLD.urls) as text),
-				     	'block_type=>'			||cast(NULLIF(NEW.block_type,OLD.block_type) as text),
-				     	'block_order=>'			||cast(NULLIF(NEW.block_order,OLD.block_order) as text),
-				     	'block_content=>'			||cast(NULLIF(NEW.b_content,OLD.b_content) as text),
-				     	'master_select=>'			||cast(NULLIF(NEW.master_select,OLD.master_select) as text),
-				     	'block_options=>'			||cast(NULLIF(NEW.b_options,OLD.b_options) as text),
-				     	'status=>'				||cast(NEW.status as text)]
+				     	'usergroup=>'			||cast(compare(NEW.usergroup,OLD.usergroup,'-') as text),
+				     	'block_name=>'			||compare(NEW.block_name,OLD.block_name,'-'),
+				     	'urls=>'			||compare(NEW.urls,OLD.urls,'-'),
+				     	'block_type=>'			||compare((cast(NEW.block_type as text)),(cast(OLD.block_type as text)),'-'),
+				     	'block_order=>'			||compare(NEW.block_order,OLD.block_order,'-'),
+				     	'block_content=>'			||compare(NEW.b_content,OLD.b_content,'-'),
+				     	'master_select=>'			||compare(NEW.master_select,OLD.master_select,'-'),
+				     	'block_options=>'			||cast((compare(NEW.b_options,OLD.b_options,array['-']))as text),
+				     	'status=>'				||compare((cast(NEW.status as text)),(cast(OLD.status as text)))]
 				     	)
            WHERE mp_versions.r_id = OLD.id;
