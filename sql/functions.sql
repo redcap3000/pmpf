@@ -34,16 +34,6 @@ CREATE FUNCTION show_table(varchar(255)) RETURNS table(table_catalog varchar(512
 	$$
 	LANGUAGE SQL;
 
-DROP FUNCTION IF EXISTS get_blocks(varchar(255));
-
-CREATE FUNCTION get_blocks(varchar(255)) RETURNS TABLE(id int,block_name varchar(255),block_order smallint,block_content text,usergroup int,group_level int,block_options text[])
-    AS $$ 
-    SELECT id,block_name,block_order,b_content,usergroup,1 as group_level,b_options
-    FROM mp_blocks
-    WHERE urls = CAST($1 AS text) OR urls = '*'
-    $$
-    LANGUAGE SQL;
-
 DROP FUNCTION IF EXISTS get_options(varchar(255));
 
 CREATE FUNCTION get_options(varchar(255)) returns table(option_value text)
@@ -74,8 +64,8 @@ CREATE FUNCTION  get_url(varchar(255),varchar(255)) returns  TABLE(b_content tex
  CREATE FUNCTION get_url(varchar(255)) RETURNS TABLE(b_content text,b_options text[])
     	AS $$ 
     	SELECT b_content,b_options
-    	FROM mp_blocks
-    	WHERE urls = CAST($1 AS text)
+    	FROM mp_blocks 
+    	WHERE urls = CAST($1 AS text) and (usergroup is null or usergroup = 3)
     	AND (b_options IS NULL or b_options[1:array_upper(b_options,1)][1:1] <@ array['page_title','no_cache','additive_title','logout'])
     	GROUP BY block_order,id,b_content,b_options
     	ORDER BY block_order,id
