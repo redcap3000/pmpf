@@ -60,7 +60,7 @@ edit the records in the database.
 Next to select a url to display simply make a SQL statement 
 
 <pre>
-SELECT * from get_blocks('homepage');
+SELECT * from get_url('homepage');
 </pre>
 
 This will select blocks that have a url that matches what is entered and return two columns, one of the data contained in field b_option, and an array (which will appear as a coded string) that contains a arrays of arrays, each inside array only containing two values - the first the key or attribute name, the second the value.
