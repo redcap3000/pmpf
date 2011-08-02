@@ -9,7 +9,7 @@
      array[
      	array['time_updated=>'||cast(localtimestamp as text),
      	'usergroup=>'			||cast(NEW.usergroup as text),
-     	'b_name=>'			||cast(NEW.block_name as text),
+     	'b_name=>'			||cast(NEW.b_name as text),
      	'urls=>'				||cast(NEW.urls as text),
      	'b_type=>'			||cast(NEW.b_type as text),
      	'b_order=>'			||cast(NEW.b_order as text),
@@ -37,7 +37,7 @@ CREATE RULE update_block AS ON UPDATE TO mp_blocks
 				     	array['time_updated=>'||cast(localtimestamp as text),
 				     	'usergroup=>'			||cast(compare(NEW.usergroup,OLD.usergroup,'-') as text),
 				     	'b_name=>'			||compare(NEW.b_name,OLD.b_name,'-'),
-				     	'urls=>'			||compare(NEW.urls,OLD.urls,'-'),
+				     	'urls=>'			||array_to_string(compare(NEW.urls,OLD.urls,array['-']),','),
 				     	'b_type=>'			||compare((cast(NEW.b_type as text)),(cast(OLD.b_type as text)),'-'),
 				     	'b_order=>'			||compare(NEW.b_order,OLD.b_order,'-'),
 				     	'b_content=>'			||compare(NEW.b_content,OLD.b_content,'-'),
