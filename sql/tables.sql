@@ -15,7 +15,7 @@ CREATE TABLE  pmpf_vars(
 );
 
 -- so we can have a default value... cant seem to select a null integer column to filter them in/out
-INSERT INTO mp_groups (g_title,usergroup,g_level) VALUES 
+INSERT INTO mp_groups (g_alias,g_title,g_level) VALUES 
 ('System Administrators','SystemGOD',1),
 ('Module Administrators','ModulesGOD',2),
 ('Guests','ViewPublished',100),
@@ -54,7 +54,7 @@ CREATE TABLE mp_blocks(
   id SERIAL PRIMARY KEY,
   usergroup integer REFERENCES mp_groups default 3,
   b_name varchar(255) NOT NULL,
-  urls VARCHAR(512) NOT NULL,
+  urls VARCHAR(512)[] NOT NULL,
   b_type block_types,
   b_order SMALLINT,
   status statuses DEFAULT 'active'
@@ -76,7 +76,7 @@ CREATE TABLE mp_users(
   randkey varchar(255),
   is_active smallint,
   UNIQUE (username,email)
-)inherits pg_users;
+);
 
 CREATE TABLE mp_sessions(
   session_id SERIAL PRIMARY KEY,
