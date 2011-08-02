@@ -8,6 +8,18 @@ class pmpf extends pgdb{
 			parent::__construct($database,$username,$pass);
 		}
 
+	function render_layout($layout){
+		foreach($layout as $block){
+		// process block options and return to screen
+			// self::process_options($block->b_options));
+			print_r($block);
+			$result .= $block->b_content;
+		}
+	// from get_url go to here..
+		return $result;
+	}
+
+
 	function get_url($url,$username=NULL,$password=NULL){
 		if($username != NULL && $password == NULL)
 			$return = "select * from get_url('$url','$username')";
@@ -20,7 +32,7 @@ class pmpf extends pgdb{
 			// unauthorized user
 			$return = "select * from get_url('$url')";
 		}
-		return self::make_assoc_array(self::get_objects($return));
+		return self::render_layout(self::make_assoc_array(self::get_objects($return)));
         }
 
         function make_assoc_array($result,$row_name = 'b_options'){
