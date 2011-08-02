@@ -53,27 +53,26 @@ CREATE FUNCTION  get_url(varchar(255),varchar(255)) returns  TABLE(b_content tex
   	AND	  group_level >=  (select group_level from mp_groups where mp_groups.id = mp_users.usergroup) or mp_blocks.usergroup = NULL
   	AND	  urls = cast($1 as text)
 	AND (b_options IS NULL or b_options[1:array_upper(b_options,1)][1:1] <@ array['page_title','no_cache','additive_title','logout'])
-  	GROUP BY block_order,mp_blocks.id,b_content,b_options
-    	ORDER BY block_order,mp_blocks.id
+  	GROUP BY b_order,mp_blocks.id,b_content,b_options
+    	ORDER BY b_order,mp_blocks.id
     
     $$
     LANGUAGE SQL;  
   
  DROP FUNCTION IF EXISTS get_url(varchar(255));
-
  CREATE FUNCTION get_url(varchar(255)) RETURNS TABLE(b_content text,b_options text[])
     	AS $$ 
-    	SELECT b_content,b_options
+    	SELECT b_content,b_options,b_type
     	FROM mp_blocks 
     	WHERE urls = CAST($1 AS text) and (usergroup is null or usergroup = 3)
     	AND (b_options IS NULL or b_options[1:array_upper(b_options,1)][1:1] <@ array['page_title','no_cache','additive_title','logout'])
-    	GROUP BY block_order,id,b_content,b_options
-    	ORDER BY block_order,id
+    	GROUP BY b_order,id,b_content,b_options
+    	ORDER BY b_order,id
     $$
     LANGUAGE SQL;  
     -- fix the way arrays get interpreted ... hmmm either here or the php, probably better here than in a language
   --make json/xml/atom output functions ! wouldn't that be rad!     
-
+-- this will need to look inside pmpf_vars 
 
 
 DROP FUNCTION IF EXISTS compare(text,text);
@@ -180,8 +179,7 @@ DROP FUNCTION IF EXISTS compare(text,text,text);
    		string_to_array(v_dat[$1][9],'=>'),		
     		string_to_array(v_dat[$1][10],'=>'),
     		array_dims(v_dat[$1][1:1]) || array_upper(v_dat,1) as dimensions
-    	FROM mp_versions
+    	FROM pmpf_versions
     	WHERE r_id = $2 and v_table = 'mp_blocks';  
-    
     $$
     LANGUAGE SQL;
