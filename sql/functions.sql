@@ -39,7 +39,7 @@ DROP FUNCTION IF EXISTS get_options(varchar(255));
 CREATE FUNCTION get_options(varchar(255)) returns table(option_value text)
 	AS $$
 	SELECT cast(b_options[1:array_lower(b_options,1)][1] as text) from mp_blocks
-	WHERE urls = $1 or urls = '*'
+	WHERE (array[$1,'*'] @> urls)
 $$
 LANGUAGE SQL;
 
@@ -48,25 +48,24 @@ DROP FUNCTION IF EXISTS get_url(varchar(255),varchar(255));
 CREATE FUNCTION  get_url(varchar(255),varchar(255)) returns  TABLE(b_content text,b_options text[])
 	AS $$
   	SELECT b_content,b_options 
-  	FROM mp_blocks INNER JOIN mp_groups ON (mp_blocks.usergroup= mp_groups.id) INNER JOIN mp_users ON (username = $2)   	
+  	FROM mp_blocks INNER JOIN mp_groups using (usergroup) INNER JOIN mp_users ON (username = $2)   	
   	WHERE status = 'active' 
-  	AND	  group_level >=  (select group_level from mp_groups where mp_groups.id = mp_users.usergroup) or mp_blocks.usergroup = NULL
-  	AND	  urls = cast($1 as text)
+  	AND	  g_level >=  (select g_level from mp_groups where mp_groups.usergroup = mp_users.usergroup) or mp_blocks.usergroup = NULL
+  	AND	 array[$1,'*'] @> urls
 	AND (b_options IS NULL or b_options[1:array_upper(b_options,1)][1:1] <@ array['page_title','no_cache','additive_title','logout'])
   	GROUP BY b_order,mp_blocks.id,b_content,b_options
     	ORDER BY b_order,mp_blocks.id
-    
     $$
     LANGUAGE SQL;  
   
  DROP FUNCTION IF EXISTS get_url(varchar(255));
- CREATE FUNCTION get_url(varchar(255)) RETURNS TABLE(b_content text,b_options text[])
+ CREATE FUNCTION get_url(varchar(255)) RETURNS TABLE(b_type block_types,b_content text,b_options text[])
     	AS $$ 
-    	SELECT b_content,b_options,b_type
+    	SELECT b_type,b_content,b_options
     	FROM mp_blocks 
-    	WHERE urls = CAST($1 AS text) and (usergroup is null or usergroup = 3)
+    	WHERE (array[$1,'*'] @> urls) and (usergroup is null or usergroup = 3) 
     	AND (b_options IS NULL or b_options[1:array_upper(b_options,1)][1:1] <@ array['page_title','no_cache','additive_title','logout'])
-    	GROUP BY b_order,id,b_content,b_options
+    	GROUP BY b_order,id,b_type,b_content,b_options
     	ORDER BY b_order,id
     $$
     LANGUAGE SQL;  
@@ -117,7 +116,7 @@ DROP FUNCTION IF EXISTS compare(int[],int[]);
 
 -- these overloaded functions will show the third passed value if the values are identical, otherwise it returns the first value passed
 -- tossing in a few type defs .. but if any are missing toss them in, or typecast to conform to below ( cast(column name as text) )
- DPOP FUNCTION IF EXISTS compare(text,text,varchar(512));
+ DROP FUNCTION IF EXISTS compare(text,text,varchar(512));
  CREATE FUNCTION compare(text,text,varchar(512)) returns text
 	as $$
 	SELECT CASE
@@ -142,7 +141,7 @@ DROP FUNCTION IF EXISTS compare(text,text,text);
         $$
         LANGUAGE SQL;
 
-	DROP FUNCTIONS IF EXISTS compare(int,int,varchar(512));
+	DROP FUNCTION IF EXISTS compare(int,int,varchar(512));
 
  CREATE FUNCTION compare(int,int,varchar(512)) RETURNS varchar(512)
         AS $$
