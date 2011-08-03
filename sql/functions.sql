@@ -24,6 +24,27 @@ CREATE FUNCTION show_tables() returns table(table_catalog text,table_schema text
 	$$
 	LANGUAGE SQL;
 
+
+DROP FUNCTION IF EXISTS show_data_types() ;
+
+CREATE FUNCTION  show_data_types() returns table(Schema name,Name varchar(256),Description text)
+
+	AS $$
+	SELECT n.nspname as "Schema",
+  pg_catalog.format_type(t.oid, NULL) AS "Name",
+  pg_catalog.obj_description(t.oid, 'pg_type') as "Description"
+FROM pg_catalog.pg_type t
+     LEFT JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+WHERE (t.typrelid = 0 OR (SELECT c.relkind = 'c' FROM pg_catalog.pg_class c WHERE c.oid = t.typrelid))
+  AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)
+      AND n.nspname <> 'pg_catalog'
+      AND n.nspname <> 'information_schema'
+  AND pg_catalog.pg_type_is_visible(t.oid)
+ORDER BY 1, 2;
+	$$
+	LANGUAGE SQL;
+
+
 DROP FUNCTION IF EXISTS show_table(varchar(255));
 
 CREATE FUNCTION show_table(varchar(255)) RETURNS table(table_catalog varchar(512),table_schema varchar(512),table_name varchar(512),table_type varchar(512), self_referencing_column_name varchar(512),
@@ -47,8 +68,8 @@ DROP FUNCTION IF EXISTS get_url(varchar(255),varchar(255));
 
 CREATE FUNCTION  get_url(varchar(255),varchar(255)) returns  TABLE(b_content text,b_options text[])
 	AS $$
-  	SELECT b_content,b_options 
-  	FROM mp_blocks INNER JOIN mp_groups using (usergroup) INNER JOIN mp_users ON (username = $2)   	
+  	SELECT b_content,b_options,master_select,array_to_string(urls) as urls,block_type 
+  	FROM mp_blocks INNER JOIN mp_groups on (mp_groups.id = mp_blocks.usergroup) INNER JOIN mp_users ON (username = $2)   	
   	WHERE status = 'active' 
   	AND	  g_level >=  (select g_level from mp_groups where mp_groups.usergroup = mp_users.usergroup) or mp_blocks.usergroup = NULL
   	AND	 array[$1,'*'] @> urls
@@ -59,13 +80,13 @@ CREATE FUNCTION  get_url(varchar(255),varchar(255)) returns  TABLE(b_content tex
     LANGUAGE SQL;  
   
  DROP FUNCTION IF EXISTS get_url(varchar(255));
- CREATE FUNCTION get_url(varchar(255)) RETURNS TABLE(b_type block_types,b_content text,b_options text[])
+ CREATE FUNCTION get_url(varchar(255)) RETURNS TABLE(b_type block_types,b_content text,b_options text[],urls text)
     	AS $$ 
-    	SELECT b_type,b_content,b_options
+    	SELECT b_type,b_content,b_options,master_select,(select array_to_string(urls,'|')) as urls
     	FROM mp_blocks 
     	WHERE (array[$1,'*'] @> urls) and (usergroup is null or usergroup = 3) 
     	AND (b_options IS NULL or b_options[1:array_upper(b_options,1)][1:1] <@ array['page_title','no_cache','additive_title','logout'])
-    	GROUP BY b_order,id,b_type,b_content,b_options
+    	GROUP BY b_order,id,b_type,b_content,master_select,urls,b_options
     	ORDER BY b_order,id
     $$
     LANGUAGE SQL;  
