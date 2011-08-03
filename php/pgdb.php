@@ -19,15 +19,18 @@ class pgdb
 	}
 
 
-	private function do_query($query, $classname=NULL, $params=NULL)
+	public function do_query($query, $classname=NULL, $params=NULL)
 	{
+		$result = false;
 		if (func_num_args() > 1) {
-			if (is_string($classname) && !is_array($params))
-				$result = pg_query($query, $classname);
+			if ((is_string($classname) && !is_array($params)) || (is_string($classname) && is_array($params))){
+					$result_set = self::get_objects($query,$classname,$params);
+				
+			if(is_array($result_set))
+				return $result_set;
+			}
 			elseif (!is_string($classname) && is_array($params))
 				$result = pg_query($query, NULL, $params);
-			elseif (is_string($classname) && is_array($params))
-				$result = pg_query($query, $classname, $params);
 		}
 		if (!$result) $result = pg_query($query);
 		return $result;
@@ -36,7 +39,8 @@ class pgdb
 	function put_array($table_name, $array, $db=NULL)
 	{
 		// experimental ??uses pg_insert(to put an array into a table )
-		//... you'll want to make sure the fields match perfectly !!
+	
+	//... you'll want to make sure the fields match perfectly !!
 
 		if ($db == NULL) $db = $this->db;
 		pg_insert($db, $table_name, $array);
@@ -53,10 +57,15 @@ class pgdb
 	function get_objects($query, $classname=NULL, $params=NULL)
 	{
 		// outputs normal array with std objects (unless classname is defined)
-		$result = $this->do_query($query, $classname, $params);
-		while ($row = pg_fetch_object($result))
-			$r []= $row;
+		$result = pg_query($query);
+		if($classname == NULL && $params== NULL)
+			while ($row = pg_fetch_object($result))
+				$r []= $row;
+		else
+			while ($row = pg_fetch_object($result,NULL,$classname,$params))
+				$r []= $row;
 		pg_free_result($result);
+		
 		return $r;
 	}
 
@@ -89,6 +98,14 @@ class pgdb
 		return is_array($meta)?$meta:NULL;
 	}
 
+
+	function get_enum_values($column,$table){
+		// returns an array with each of the available enum values
+		$result =  (self::get_all_array("select enum_range($column) as $column from $table LIMIT 1"));
+		$result = str_replace(array('{','}'),'',$result[0]);
+		$result = explode(',',$result[$column]);
+		return $result;
+	}
 	function get_assoc($query, $params=NULL)
 	{
 		// outputs array with associtative arrays
@@ -153,7 +170,8 @@ class pgdb
 	               	foreach($row_name as $row_name2)
         	                foreach($result as $row)
 	                                if($row->row_name2 != '')$options[]=array_filter(explode('}',$row->$row_name2));
-	        foreach($options as $item){
+	        if($options && is_array($options))
+		foreach($options as $item){
 	                foreach($item as $opt){
 	                        $opt = str_replace(array('"','{'),'',$opt);
                         	$opt = explode(',',trim($opt, ','));
