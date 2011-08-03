@@ -10,9 +10,13 @@ class pmpf extends pgdb{
 
 	function render_layout($layout){
 		foreach($layout as $loc=>$block){
-		// process block options and return to screen
+// process block options and return to screen
+// parse replaceable variables, block options first
+// handle 'inner sql' or just the 'master_select' statements ... may want to just 
+// get rid of inner sql in favor of making new blocks..
 			// self::process_options($block->b_options));
 //			print_r($block);
+			
 
 			$result .= $block->b_content;
 		}
@@ -36,45 +40,21 @@ class pmpf extends pgdb{
 		return self::render_layout(self::make_assoc_array(self::get_objects($return)));
         }
 
-        function make_assoc_array($result,$row_name = 'b_options'){
-	/*  
-	Converts a column that contains an array into object parameters provided a result set from get_objects() and the name of the column(s)
-	that conform to the standards listed below.  First define your column as a multimdensional array ex : text[][]. When creating
-	array sets structure them as such array[[parameter,value],[parameter2,value2]]
-	Coded /serialized string aren't used to allow for easier sorting , selection, and
-	conditional checking via SQL functions/tiggers/selections etc.
-	*/
-                if(strpos($row_name,',') > 0) $row_name = explode(',',$row_name);
-                if(!is_array($row_name)){
-                        foreach($result as  $loc=>$row){
-                                unset($options);
-                                if($row->$row_name != '')$options[]=array_filter(explode('}',$row->$row_name));
-                                if($options){
-                                foreach($options as $item){
-                                        foreach($item as $opt){
-                                                $opt = str_replace(array('"','{'),'',$opt);
-                                                $opt = explode(',',trim($opt, ','));
-                                                $row->$opt[0] = $opt[1];
-                                        }
-                                 unset($row->$row_name);
-                                $result[$loc] = $row;
-                                }
-                                }
-                        }
+	function get_blocks($url,$username=NULL,$password=NULL){
+		if($username != NULL && $password == NULL)
+                        $return = "select * from get_url('$url','$username')";
+                        // already authorized ... may want to check on session key
+                elseif(username != NULL && $password !=NULL)
+                {
+                        // log userin /pass token create cookie ??
                 }
-                else
-                        foreach($row_name as $row_name2)
-                                foreach($result as $row)
-                                        if($row->row_name2 != '')$options[]=array_filter(explode('}',$row->$row_name2));
-                foreach($options as $item){
-                        foreach($item as $opt){
-                                $opt = str_replace(array('"','{'),'',$opt);
-                                $opt = explode(',',trim($opt, ','));
-                                $output [$opt[0]] = $opt[1];
-                        }
+                else{
+                        // unauthorized user
+                        $return = "select * from get_url('$url')";
                 }
-                return ($result?$result:0);
+                return self::make_assoc_array(self::get_objects($return),'b_options');
 	}
+
 
         function string_to_array($string,$array_name='block_options'){
 	// converts coded array (specifically for versioning) in a column into php accessible associtative array
