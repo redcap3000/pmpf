@@ -2,17 +2,18 @@
 require('pgdb.php');
 // Call this object instead of pgdb
 class pmpf extends pgdb{
-	public $db;
+	public $db,$html_output,$html_head;
 	function __construct($username,$pass,$database){
 		if(!$this->db)
 			parent::__construct($database,$username,$pass);
 		}
 
 	function render_layout($layout){
-		foreach($layout as $block){
+		foreach($layout as $loc=>$block){
 		// process block options and return to screen
 			// self::process_options($block->b_options));
-			print_r($block);
+//			print_r($block);
+
 			$result .= $block->b_content;
 		}
 	// from get_url go to here..
